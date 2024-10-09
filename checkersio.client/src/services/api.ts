@@ -1,5 +1,11 @@
 export const getBoardFromAPI = async (): Promise<number[][]> => {
     const response = await fetch('http://localhost:5187/api/Game/peek');
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+    }
+
     const data = await response.json();
     return data;
 };
@@ -20,7 +26,7 @@ export const movePieceAPI = async (from: [number, number], to: [number, number])
 
     if (!response.ok) {
         const errorText = await response.text();  // Capture the backend error message
-        throw new Error(errorText);  // Throw the specific error message
+        throw new Error(errorText);  
     }
 
     const data = await response.text();
@@ -33,8 +39,8 @@ export const startNewGameAPI = async (): Promise<string> => {
     });
 
     if (!response.ok) {
-        const errorText = await response.text();  // Capture the backend error message
-        throw new Error(errorText);  // Throw the specific error message
+        const errorText = await response.text();  
+        throw new Error(errorText);  
     }
 
     const data = await response.text();

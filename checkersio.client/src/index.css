@@ -1,6 +1,6 @@
 .board {
     display: grid;
-    grid-template-columns: repeat(8, 50px); /* 8 columns */
+    grid-template-columns: repeat(8, 50px); 
     grid-gap: 1px;
 }
 
@@ -17,42 +17,40 @@
     justify-content: center;
 }
 
-    /* Existing empty square style */
     .square.empty {
         background-color: white;
     }
 
-    /* New styles for light and dark squares */
     .square.light {
-        background-color: #f0f0f0; /* Light gray color */
+        background-color: #f0f0f0;
     }
 
     .square.dark {
-        background-color: #4db6ac; /* Teal color */
+        background-color: #4db6ac; 
     }
 
-/* Player pieces - positioned inside the squares */
+
 .piece {
-    width: 40px; /* Slightly smaller than the square */
+    width: 40px; 
     height: 40px;
-    border-radius: 50%; /* Make the piece circular */
+    border-radius: 50%; 
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-    /* Player 1 - white */
+    
     .piece.player1 {
         background-color: white;
-        border: 2px solid black; /* Border for visibility */
+        border: 2px solid black; 
     }
 
-    /* Player 2 - black */
+    
     .piece.player2 {
         background-color: black;
     }
 
-/* Optional: Highlight selected square */
+
 .square.selected {
     border: 2px solid yellow;
 }

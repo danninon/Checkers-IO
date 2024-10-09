@@ -4,7 +4,7 @@ interface SquareProps {
     piece: number;
     onClick: () => void;
     isSelected: boolean;
-    isDark: boolean;  // New prop to determine if the square is dark
+    isDark: boolean;  
 }
 
 const Square: React.FC<SquareProps> = ({ piece, onClick, isSelected, isDark }) => {
@@ -19,7 +19,6 @@ const Square: React.FC<SquareProps> = ({ piece, onClick, isSelected, isDark }) =
             className={`square ${isDark ? 'dark' : 'light'} ${isSelected ? 'selected' : ''}`}
             onClick={onClick}
         >
-            {/* Check if a piece is present */}
             {piece !== 0 && <div className={`piece ${getPieceClass()}`}></div>}
         </div>
     );
