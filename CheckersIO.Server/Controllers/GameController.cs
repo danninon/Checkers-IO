@@ -14,7 +14,7 @@ namespace CheckersGame.Controllers
         {
             Console.WriteLine("on GameController ctor");
             engine = gameEngine;
-            // Initialize the board when the controller is created
+
 
 
         }
@@ -23,7 +23,7 @@ namespace CheckersGame.Controllers
         public IActionResult GetBoard()
         {
             Console.WriteLine("At peek");
-            int[,] board = engine.getBoard(); // Get the 2D array from the engine
+            int[,] board = engine.getBoard();
 
             // Convert the 2D array to a JSON-serializable format (int[][])
             int rows = board.GetLength(0);
@@ -39,7 +39,6 @@ namespace CheckersGame.Controllers
                 }
             }
 
-            // Return the converted board as a JSON response
             return Ok(boardRepresentation);
         }
 
@@ -49,7 +48,6 @@ namespace CheckersGame.Controllers
             Console.WriteLine("initializaing...");
             engine.initGame();
 
-            // Initialize and return the board state as a response
             return Ok("Game started. Board initialized.");
         }
 
@@ -59,7 +57,6 @@ namespace CheckersGame.Controllers
             var from = Tuple.Create(request.FromRow, request.FromCol);
             var to = Tuple.Create(request.ToRow, request.ToCol);
 
-            // Call the Move method from GameEngine
             string moveResult = engine.Move(from, to);
 
             if (moveResult == "Move executed successfully.")
@@ -68,7 +65,7 @@ namespace CheckersGame.Controllers
             }
             else
             {
-                return BadRequest(moveResult); // Return the specific error message
+                return BadRequest(moveResult);
             }
         }
 
