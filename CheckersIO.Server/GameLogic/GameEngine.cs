@@ -241,6 +241,8 @@ namespace CheckersGame.GameLogic
 
         private bool AnyPieceCanEat(int player)
         {
+            Console.WriteLine($"Checking if player {player} can eat...");
+
             // Loop over the board to find all the player's pieces
             for (int row = 0; row < 8; row++)
             {
@@ -248,22 +250,34 @@ namespace CheckersGame.GameLogic
                 {
                     if (board[row, col] == player)  // Found a piece belonging to the player
                     {
-                        // Check all four diagonal directions for an "eating" move
-                        if (CanEatInDirection(player, row, col, 1, 1) ||  // Down-right
-                            CanEatInDirection(player, row, col, 1, -1) || // Down-left
-                            CanEatInDirection(player, row, col, -1, 1) || // Up-right
-                            CanEatInDirection(player, row, col, -1, -1))  // Up-left
+                        // Player 1 (bottom) can only eat down-left and down-right
+                        if (player == 1)
                         {
-                            return true;  // Found a piece that can eat, no need to check further
+                            if (CanEatInDirection(player, row, col, 1, 1) ||  // Down-right
+                                CanEatInDirection(player, row, col, 1, -1))  // Down-left
+                            {
+                                Console.WriteLine($"Player {player} can eat with piece at ({row}, {col}).");
+                                return true;
+                            }
+                        }
+                        // Player 2 (top) can only eat up-left and up-right
+                        else if (player == 2)
+                        {
+                            if (CanEatInDirection(player, row, col, -1, 1) ||  // Up-right
+                                CanEatInDirection(player, row, col, -1, -1))  // Up-left
+                            {
+                                Console.WriteLine($"Player {player} can eat with piece at ({row}, {col}).");
+                                return true;
+                            }
                         }
                     }
                 }
             }
 
+            Console.WriteLine($"Player {player} cannot eat.");
             return false;  // No piece can eat
         }
 
-        // Helper method to check if a piece can eat in a particular direction
         private bool CanEatInDirection(int player, int fromRow, int fromCol, int rowDir, int colDir)
         {
             int opponent = (player == 1) ? 2 : 1;  // Determine opponent's piece
@@ -286,5 +300,6 @@ namespace CheckersGame.GameLogic
 
             return false;
         }
+
     }
 }
