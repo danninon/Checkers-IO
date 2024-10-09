@@ -24,16 +24,22 @@ const Game: React.FC = () => {
 
             try {
                 const result = await movePieceAPI([fromRow, fromCol], [row, col]);  // Send move to API
-                console.log(result);  // Handle response (success/failure)
+                console.log(result);  // Log success message
 
                 const updatedBoard = await getBoardFromAPI();  // Fetch updated board
                 setBoard(updatedBoard);
                 setSelectedPiece(null);  // Reset selected piece after move
                 setErrorMessage(null);   // Clear any error messages
 
-            } catch (error) {
+            } catch (error: unknown) {  // Handle the error as unknown
                 console.error("Move failed:", error);
-                setErrorMessage("Invalid move. Please try again.");
+
+                if (error instanceof Error) {
+                    setErrorMessage(error.message);  // Safely access the error message
+                } else {
+                    setErrorMessage("An unknown error occurred.");  // Fallback message
+                }
+
                 setSelectedPiece(null);  // Reset the selected piece on failure
             }
         } else {
@@ -44,6 +50,7 @@ const Game: React.FC = () => {
             }
         }
     };
+
 
     // Handle the "Start New Game" button click
     const handleStartNewGame = async () => {
@@ -65,9 +72,13 @@ const Game: React.FC = () => {
         <div className="game">
             <h1>Checkers Game</h1>
             <button onClick={handleStartNewGame}>Start New Game</button>  {/* New game button */}
-            {errorMessage && <p className="error">{errorMessage}</p>}
+            {errorMessage && <p className="error">{errorMessage}</p>}  {/* Display error message */}
             {selectedPiece && <p>Selected Piece: {selectedPiece[0]}, {selectedPiece[1]}</p>}
-            <Board board={board} handleSquareClick={handleSquareClick} />
+            <Board
+                board={board}
+                handleSquareClick={handleSquareClick}
+                selectedPiece={selectedPiece}  // Pass the selected piece as a prop
+            />
         </div>
     );
 };

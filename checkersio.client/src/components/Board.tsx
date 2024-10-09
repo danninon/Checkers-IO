@@ -20,7 +20,7 @@ const Board: React.FC<BoardProps> = ({ board, handleSquareClick, selectedPiece }
                                 key={colIndex}
                                 piece={piece}
                                 onClick={() => handleSquareClick(rowIndex, colIndex)}
-                                isSelected={selectedPiece && selectedPiece[0] === rowIndex && selectedPiece[1] === colIndex}
+                                isSelected={!!(selectedPiece && selectedPiece[0] === rowIndex && selectedPiece[1] === colIndex)}  // Ensure boolean
                                 isDark={isDark}  // Pass whether the square is dark
                             />
                         );

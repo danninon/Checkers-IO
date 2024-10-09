@@ -19,7 +19,8 @@ export const movePieceAPI = async (from: [number, number], to: [number, number])
     });
 
     if (!response.ok) {
-        throw new Error("Failed to execute move");
+        const errorText = await response.text();  // Capture the backend error message
+        throw new Error(errorText);  // Throw the specific error message
     }
 
     const data = await response.text();
@@ -32,7 +33,8 @@ export const startNewGameAPI = async (): Promise<string> => {
     });
 
     if (!response.ok) {
-        throw new Error("Failed to start new game");
+        const errorText = await response.text();  // Capture the backend error message
+        throw new Error(errorText);  // Throw the specific error message
     }
 
     const data = await response.text();
