@@ -5,44 +5,34 @@ namespace CheckersGame.GameLogic
     public class GameEngine
     {
         private readonly int[,] board = new int[8, 8];
-
-        //private bool boardStartPosition = false;
-        //private int gameCounter = 0;
-
-
         private bool isGameStarted = false;
         private bool isGameWinConditionReached = false;
-
         private int currentPlayer = 1;
-        
-        public GameEngine()
-        {
-        }
 
-        public int[,] getBoard() { return board;  }
+        public GameEngine() { }
+
+        public int[,] getBoard() { return board; }
 
         public void initGame()
         {
-            //init player 1
+            // Initialize player 1
             board[0, 7] = board[0, 5] = board[0, 3] = board[0, 1] = 1;
             board[1, 6] = board[1, 4] = board[1, 2] = board[1, 0] = 1;
             board[2, 7] = board[2, 5] = board[2, 3] = board[2, 1] = 1;
 
-            //init player 2
+            // Initialize player 2
             board[5, 6] = board[5, 4] = board[5, 2] = board[5, 0] = 2;
             board[6, 7] = board[6, 5] = board[6, 3] = board[6, 1] = 2;
             board[7, 6] = board[7, 4] = board[7, 2] = board[7, 0] = 2;
 
-            for(int i = 0; i < 2; ++i)
+            // Clear the middle rows
+            for (int i = 0; i < 2; ++i)
             {
                 for (int j = 0; j < 8; ++j)
                     board[3 + i, j] = 0;
             }
 
-            
-            //boardStartPosition = true;
             this.isGameStarted = true;
-
             Console.WriteLine(this.ToString());
         }
 
@@ -50,12 +40,11 @@ namespace CheckersGame.GameLogic
         {
             StringBuilder sb = new();
             sb.AppendLine("Checkers Board:");
-
             sb.Append("   0 1 2 3 4 5 6 7");
             sb.AppendLine();
             sb.Append("  _ _ _ _ _ _ _ _");
             sb.AppendLine();
-            
+
             for (int i = 0; i < 8; ++i)
             {
                 sb.Append($"{i}|");
@@ -63,51 +52,50 @@ namespace CheckersGame.GameLogic
                 {
                     sb.Append($"{board[i, j]} ");
                 }
-                sb.AppendLine(); // Move to the next line after each row
+                sb.AppendLine();
             }
 
             return sb.ToString();
         }
 
-
         public string Move(Tuple<int, int> from, Tuple<int, int> to)
         {
             Console.WriteLine(this.ToString());
             Console.WriteLine("Current player: " + currentPlayer);
-            // Log the attempted move for debugging
             Console.WriteLine($"Attempting to move from ({from.Item1}, {from.Item2}) to ({to.Item1}, {to.Item2}).");
 
             // Validate the move
             string validationResult = ValidateMovement(from, to);
-
-            // Log the validation result
             Console.WriteLine($"Validation result: {validationResult}");
 
             if (validationResult != "Valid")
             {
-                // If validation fails, log the error and return the error message
                 Console.WriteLine($"Move failed: {validationResult}");
                 return validationResult;
             }
-            else
+
+            // Check if the current move is a capture
+            bool moveInvolvedCapture = DidMoveInvolveCapture(from, to);
+
+            // Check if any other piece of the current player could eat an opponent
+            bool anyPieceCanEat = AnyPieceCanEat(currentPlayer);
+
+            // If another piece could eat and the current move did not involve a capture, burn the other pieces
+            if (anyPieceCanEat && !moveInvolvedCapture)
             {
-                // Log the player change
-                Console.WriteLine($"Current player before move: Player {currentPlayer}");
-
-                // Switch the current player and execute the move
-                currentPlayer = (currentPlayer == 1) ? 2 : 1;
-                ExecuteMove(from, to);
-
-                // Log the player after the move and board state
-                Console.WriteLine($"Move executed successfully. Current player is now Player {currentPlayer}");
-                Console.WriteLine("Current board state:");
-                Console.WriteLine(this.ToString()); // This will print the current state of the board
-
-                return "Move executed successfully.";
+                BurnPieceThatCouldEat(excludeRow: from.Item1, excludeCol: from.Item2);
             }
+
+            // Execute the move
+            ExecuteMove(from, to);
+
+            // Switch the current player
+            currentPlayer = (currentPlayer == 1) ? 2 : 1;
+
+            Console.WriteLine($"Move executed successfully. Current player is now Player {currentPlayer}");
+            Console.WriteLine(this.ToString());
+            return "Move executed successfully.";
         }
-
-
 
         private string ValidateMovement(Tuple<int, int> from, Tuple<int, int> to)
         {
@@ -117,43 +105,33 @@ namespace CheckersGame.GameLogic
                 int fromCol = from.Item2;
                 int toRow = to.Item1;
                 int toCol = to.Item2;
-                if (isGameStarted == false)
-                {
-                    throw new Exception("Game hasn't started, initialize the game");
-                }
 
-                // Check if the move is out of bounds
+                if (!isGameStarted)
+                    throw new Exception("Game hasn't started, initialize the game");
+
                 if (IsOutOfBounds(fromRow, fromCol) || IsOutOfBounds(toRow, toCol))
                     throw new Exception("Move is out of bounds.");
 
                 int piece = board[fromRow, fromCol];
                 int target = board[toRow, toCol];
 
-                // Validate that there is a piece at the starting position
                 if (piece == 0)
                     throw new Exception("There is no piece at the starting position.");
 
-                // Validate that the current player is moving their own piece
                 if (piece != currentPlayer)
                     throw new Exception("You are trying to move the opponent's piece.");
 
-                // Validate that the target position is not occupied
                 if (target != 0)
                     throw new Exception("The target position is already occupied.");
 
                 int rowDiff = Math.Abs(toRow - fromRow);
                 int colDiff = Math.Abs(toCol - fromCol);
 
-                Console.WriteLine("@@@");
-
-                // Check if it's a legal diagonal move (1 step forward)
                 if (rowDiff == 1 && colDiff == 1 && IsForwardMove(piece, fromRow, toRow))
                 {
-                    // Case 1: Simple movement (non-eating)
-                    if (AnyPieceCanEat(piece))
-                        throw new Exception("You must eat if a capture is available.");
-                } 
-                // Case 2: Eating move (2 steps diagonal and the opponent's piece in between)
+                    // Case 1: Simple diagonal movement
+                    return "Valid";
+                }
                 else if (rowDiff == 2 && colDiff == 2 && IsForwardMove(piece, fromRow, toRow))
                 {
                     int midRow = (fromRow + toRow) / 2;
@@ -162,6 +140,9 @@ namespace CheckersGame.GameLogic
 
                     if (middlePiece == 0 || middlePiece == piece)
                         throw new Exception("No opponent piece to eat, or trying to eat your own piece.");
+
+                    // Case 2: Valid capture (jumping over opponent)
+                    return "Valid";
                 }
                 else
                 {
@@ -171,14 +152,10 @@ namespace CheckersGame.GameLogic
             catch (Exception e)
             {
                 Console.WriteLine($"Move is invalid: {e.Message}");
-                return e.Message; // Return the error message instead of false
+                return e.Message;
             }
-
-            // Move is valid
-            return "Valid";
         }
 
-        // Helper methods
         private void ExecuteMove(Tuple<int, int> from, Tuple<int, int> to)
         {
             int fromRow = from.Item1;
@@ -186,25 +163,67 @@ namespace CheckersGame.GameLogic
             int toRow = to.Item1;
             int toCol = to.Item2;
 
-            // Move the piece to the new position
+            // Move the piece
             board[toRow, toCol] = board[fromRow, fromCol];
             board[fromRow, fromCol] = 0;
 
-            // If it's a jump move (eating), remove the opponent's piece
+            // If it was a capture move, remove the opponent's piece
             if (Math.Abs(toRow - fromRow) == 2)
             {
                 int midRow = (fromRow + toRow) / 2;
                 int midCol = (fromCol + toCol) / 2;
-                board[midRow, midCol] = 0; // Remove the opponent's piece
+                board[midRow, midCol] = 0;
             }
 
+            // Check for win condition after the move
             if (CheckWinCondition(currentPlayer))
             {
                 Console.WriteLine($"Player {currentPlayer} wins!");
                 isGameWinConditionReached = true;
                 isGameStarted = false;
-                // You can also return or set a flag if needed, depending on how you want to handle the game state.
             }
+        }
+
+        // Helper method to check if the move involved a capture
+        private bool DidMoveInvolveCapture(Tuple<int, int> from, Tuple<int, int> to)
+        {
+            return Math.Abs(from.Item1 - to.Item1) == 2 && Math.Abs(from.Item2 - to.Item2) == 2;
+        }
+
+        // This method "burns" any piece of the current player that could have eaten but didn't, excluding the piece that just moved
+        private void BurnPieceThatCouldEat(int excludeRow, int excludeCol)
+        {
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    // Skip the piece that just moved
+                    if (row == excludeRow && col == excludeCol)
+                        continue;
+
+                    // Check if the current piece can eat
+                    if (board[row, col] == currentPlayer && CanPieceEat(row, col))
+                    {
+                        Console.WriteLine($"Burning piece at ({row}, {col}) for failing to capture.");
+                        board[row, col] = 0; // Remove the piece
+                    }
+                }
+            }
+        }
+
+
+        // Check if a specific piece can capture an opponent
+        private bool CanPieceEat(int row, int col)
+        {
+            int piece = board[row, col];
+            int opponent = (piece == 1) ? 2 : 1;
+
+            if (IsValidCapture(row, col, row + 2, col + 2, opponent)) return true;
+            if (IsValidCapture(row, col, row + 2, col - 2, opponent)) return true;
+            if (IsValidCapture(row, col, row - 2, col + 2, opponent)) return true;
+            if (IsValidCapture(row, col, row - 2, col - 2, opponent)) return true;
+
+            return false;
         }
 
         private bool CheckWinCondition(int player)
@@ -224,6 +243,18 @@ namespace CheckersGame.GameLogic
             return true;
         }
 
+
+        // Check if the move is a valid capture
+        private bool IsValidCapture(int fromRow, int fromCol, int toRow, int toCol, int opponent)
+        {
+            if (IsOutOfBounds(toRow, toCol)) return false;
+
+            int midRow = (fromRow + toRow) / 2;
+            int midCol = (fromCol + toCol) / 2;
+
+            return board[midRow, midCol] == opponent && board[toRow, toCol] == 0;
+        }
+
         private bool IsOutOfBounds(int row, int col)
         {
             return row < 0 || row >= 8 || col < 0 || col >= 8;
@@ -231,19 +262,25 @@ namespace CheckersGame.GameLogic
 
         private bool IsForwardMove(int piece, int fromRow, int toRow)
         {
-            Console.WriteLine($"player:{piece} | fromRow:{fromRow} | toRow:{toRow}");
-            if (piece == 1) // Player 1 can only move downwards (rows increase)
-                return toRow > fromRow;
-            if (piece == 2) // Player 2 can only move upwards (rows decrease)
-                return toRow < fromRow;
-            return false;
+            return piece == 1 ? toRow > fromRow : toRow < fromRow;
         }
 
         private bool AnyPieceCanEat(int player)
         {
-            // Check the board for any piece of the current player that can eat an opponent piece.
-            // This method can be expanded later to scan the board and detect if any eating move is possible.
-            return false; // For now, we assume no other piece can eat
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    if (board[row, col] == player)
+                    {
+                        if (CanPieceEat(row, col))
+                            return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }
+
+
